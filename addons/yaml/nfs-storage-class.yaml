@@ -2,10 +2,36 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: nfs-csi-21
+  name: nfs-csi-01
 provisioner: nfs.csi.k8s.io
 parameters:
-  server: 192.168.0.21
+  server: 192.168.10.1
+  share: /data/nfs_share
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4.2
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi-02
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 192.168.10.2
+  share: /data/nfs_share
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4.2
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi-03
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 192.168.10.3
   share: /data/nfs_share
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
