@@ -80,9 +80,9 @@ spec:
   dns:
     ## Optional hosts file content to coredns use as /etc/hosts file.
     dnsEtcHosts: |
-      192.168.0.17 harbor.example.com
+      192.168.10.1 harbor.example.com
     nodeEtcHosts: |
-      192.168.0.17  harbor.example.com
+      192.168.10.1  harbor.example.com
   enabledAddons: [ "*" ]
   addons:
     - name: csi-driver-nfs
