@@ -1,0 +1,85 @@
+# https://github.com/kubernetes/dashboard/blob/master/charts/helm-chart/kubernetes-dashboard/values.yaml
+metrics-server:
+  enabled: false
+cert-manager:
+  enabled: false
+nginx:
+  enabled: false
+
+app:
+  ingress:
+    enabled: true
+    hosts:
+      - dashboard.k8s.example.com
+    ingressClassName: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      # https://cert-manager.io/docs/usage/ingress/#supported-annotations
+      cert-manager.io/common-name: "Kubernetes Dashboard of example inc"
+      cert-manager.io/subject-organizations: "Example Inc"
+      cert-manager.io/subject-organizationalunits: "DevOps"
+      cert-manager.io/duration: 8760h
+      cert-manager.io/renew-before: 336h
+    secretName: k8s-dashboard-tls
+    issuer:
+      name: example-ca-issuer
+      # Scope determines what kind of issuer annotation will be used on ingress resource
+      # - default - adds 'cert-manager.io/issuer'
+      # - cluster - adds 'cert-manager.io/cluster-issuer'
+      # - disabled - disables cert-manager annotations
+      scope: cluster
+
+api:
+  image:
+    repository: m.daocloud.io/docker.io/kubernetesui/dashboard-api
+  containers:
+    # https://github.com/kubernetes/dashboard/blob/master/docs/common/arguments.md
+    args:
+      - --token-ttl=43200
+      - --enable-skip-login
+web:
+  image:
+    repository: m.daocloud.io/docker.io/kubernetesui/dashboard-web
+
+## Metrics Scraper
+## Container to scrape, store, and retrieve a window of time from the Metrics Server.
+## refs: https://github.com/kubernetes-sigs/dashboard-metrics-scraper
+metricsScraper:
+  ## Whether to enable dashboard-metrics-scraper
+  enabled: true
+  image:
+    repository: m.daocloud.io/docker.io/kubernetesui/metrics-scraper
+
+## Extra configurations:
+## - manifests
+## - predefined roles
+## - prometheus
+## - etc...
+extras:
+  # Start in ReadOnly mode.
+  # Specifies whether cluster-wide RBAC resources (ClusterRole, ClusterRolebinding) with read only permissions to all resources listed inside the cluster should be created
+  # Only dashboard-related Secrets and ConfigMaps will still be available for writing.
+  #
+  # The basic idea of the clusterReadOnlyRole
+  # is not to hide all the secrets and sensitive data but more
+  # to avoid accidental changes in the cluster outside the standard CI/CD.
+  #
+  # It is NOT RECOMMENDED to use this version in production.
+  # Instead, you should review the role and remove all potentially sensitive parts such as
+  # access to persistentvolumes, pods/log etc.
+  clusterReadOnlyRole: true
+  # It is possible to add additional rules if read only role is enabled.
+  # This can be useful, for example, to show CRD resources.
+  clusterReadOnlyRoleAdditionalRules:
+    - apiGroups: [ "apiextensions.k8s.io" ]
+      resources: [ "customresourcedefinitions" ]
+      verbs: [ "get", "list", "watch" ]
+    - apiGroups: [ "networking.k8s.io" ]
+      resources: [ "ingressclasses" ]
+      verbs: [ "get", "list", "watch" ]
+    - apiGroups: [ "" ]
+      resources: [ "secrets" ]
+      verbs: [ "get", "list", "watch" ]
+  serviceMonitor:
+    # Whether to create a Prometheus Operator service monitor.
+    enabled: false

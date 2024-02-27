@@ -1,0 +1,142 @@
+---
+# https://github.com/kubesphere/kubekey/blob/master/docs/config-example.md
+apiVersion: kubekey.kubesphere.io/v1alpha2
+kind: Cluster
+metadata:
+  name: example-cluster
+spec:
+  hosts:
+    - { name: example-master-01, address: 192.168.10.1, internalAddress: 192.168.10.1, user: example, password: "P@ssw0rd" }
+    - { name: example-master-02, address: 192.168.10.2, internalAddress: 192.168.10.2, user: example, password: "P@ssw0rd" }
+    - { name: example-master-03, address: 192.168.10.3, internalAddress: 192.168.10.3, user: example, password: "P@ssw0rd" }
+  roleGroups:
+    controller:
+      - example-master-01
+    etcd:
+      - example-master-01
+      - example-master-02
+      - example-master-03
+    control-plane:
+      - example-master-01
+      - example-master-02
+      - example-master-03
+    worker:
+    nfs-server:
+      - example-master-01
+      - example-master-02
+      - example-master-03
+  controlPlaneEndpoint:
+    ## Internal loadbalancer for apiservers 
+    # internalLoadbalancer: haproxy
+
+    domain: lb.kubesphere.local
+    address: "192.168.10.1"
+    port: 6443
+  kubernetes:
+    version: v1.29.1
+    clusterName: cluster.local
+    autoRenewCerts: true
+    containerManager: containerd
+    apiserverArgs:
+      - service-node-port-range=80-32767
+  etcd:
+    type: kubekey
+  network:
+    plugin: calico
+    kubePodsCIDR: 10.233.64.0/18
+    kubeServiceCIDR: 10.233.0.0/18
+    ## multus support. https://github.com/k8snetworkplumbingwg/multus-cni
+    multusCNI:
+      enabled: false
+  system:
+    rpms:
+      - nfs-utils
+    debs:
+      - nfs-common
+    preInstall:
+      - name: install nfs server
+        role: nfs-server
+        bash: /bin/bash -x install_nfs_server.sh
+        materials:
+          - ./scripts/install_nfs_server.sh
+    postClusterInstall:
+      - name: change taints config of control planes
+        role: controller
+        bash: /bin/bash -x control_plane_taint.sh
+        materials:
+          - ./scripts/control_plane_taint.sh
+    postInstall:
+      - name: trust self-signed ca cert
+        bash: |
+          mv example-ca.crt /usr/local/share/ca-certificates
+          update-ca-certificates
+        materials:
+          - ./example-ca.crt
+  registry:
+    privateRegistry: ""
+    namespaceOverride: ""
+    registryMirrors: [ ]
+    insecureRegistries: [ ]
+  dns:
+    ## Optional hosts file content to coredns use as /etc/hosts file.
+    dnsEtcHosts: |
+      192.168.0.17 harbor.example.com
+    nodeEtcHosts: |
+      192.168.0.17  harbor.example.com
+  enabledAddons: [ "*" ]
+  addons:
+    - name: csi-driver-nfs
+      namespace: storage
+      sources:
+        chart:
+          # https://github.com/kubernetes-csi/csi-driver-nfs/tree/master/charts
+          release: csi-driver-nfs
+          path: ./addons/charts/csi-driver-nfs-v4.6.0.tgz
+          valuesFile: ./addons/values/csi-driver-nfs.yaml
+        yaml:
+          path:
+            - ./addons/yaml/nfs-storage-class.yaml
+    - name: metrics-server
+      namespace: monitoring
+      sources:
+        chart:
+          # https://artifacthub.io/packages/helm/metrics-server/metrics-server
+          release: metrics-server
+          name: metrics-server
+          repo: https://kubernetes-sigs.github.io/metrics-server/
+          valuesFile: ./addons/values/metrics-server.yaml
+    - name: ingress-nginx
+      namespace: network
+      sources:
+        chart:
+          # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx
+          release: ingress-nginx
+          path: ./addons/charts/ingress-nginx-4.9.1.tgz
+          valuesFile: ./addons/values/ingress-nginx.yaml
+    - name: cert-manager
+      namespace: cert-manager
+      sources:
+        chart:
+          # https://artifacthub.io/packages/helm/cert-manager/cert-manager
+          release: cert-manager
+          path: ./addons/charts/cert-manager-v1.14.1.tgz
+          valuesFile: ./addons/values/cert-manager.yaml
+        yaml:
+          path:
+            - ./addons/yaml/cluster-issuer.yaml
+    - name: kubernetes-dashboard
+      namespace: dashboard
+      sources:
+        chart:
+          # https://artifacthub.io/packages/helm/k8s-dashboard/kubernetes-dashboard
+          release: kubernetes-dashboard
+          path: ./addons/charts/kubernetes-dashboard-7.0.0-alpha1.tgz
+          valuesFile: ./addons/values/kubernetes-dashboard.yaml
+    - name: argo-cd
+      namespace: argocd
+      sources:
+        chart:
+          # https://artifacthub.io/packages/helm/argo/argo-cd
+          release: argo-cd
+          path: ./addons/charts/argo-cd-5.53.14.tgz
+          valuesFile: ./addons/values/argo-cd.yaml

@@ -1,0 +1,60 @@
+# https://github.com/argoproj/argo-helm/blob/argo-cd-5.53.14/charts/argo-cd/values.yaml
+---
+# -- Provide a name in place of `argocd`
+nameOverride: argocd
+## Redis-HA subchart replaces custom redis deployment when `redis-ha.enabled=true`
+# Ref: https://github.com/DandyDeveloper/charts/blob/master/charts/redis-ha/values.yaml
+redis-ha:
+  # -- Enables the Redis HA subchart and disables the custom Redis single node deployment
+  enabled: true
+
+## Application controller
+controller:
+  # -- The number of application controller pods to run.
+  # Additional replicas will cause sharding of managed clusters across number of replicas.
+  replicas: 1
+
+server:
+  # -- The number of server pods to run
+  replicas: 2
+
+  ingress:
+    # -- Enable an ingress resource for the Argo CD server
+    enabled: true
+    # -- Additional ingress annotations
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      # https://cert-manager.io/docs/usage/ingress/#supported-annotations
+      cert-manager.io/cluster-issuer: "example-ca-issuer"
+      cert-manager.io/common-name: "Argo CD of example inc"
+      cert-manager.io/subject-organizations: "Example Inc"
+      cert-manager.io/subject-organizationalunits: "DevOps"
+      cert-manager.io/duration: 8760h
+      cert-manager.io/renew-before: 336h
+    # -- Defines which ingress controller will implement the resource
+    ingressClassName: "nginx"
+    # -- List of ingress hosts
+    ## Argo Ingress.
+    ## Hostnames must be provided if Ingress is enabled.
+    ## Secrets must be manually created in the namespace
+    hosts:
+      - argocd.example.com
+    tls:
+      - secretName: argocd-server-tls
+        hosts:
+          - argocd.example.com
+
+dex:
+  ## Dex image
+  image:
+    # -- Dex image repository
+    repository: m.daocloud.io/ghcr.io/dexidp/dex
+
+repoServer:
+  # -- The number of repo server pods to run
+  replicas: 2
+
+applicationSet:
+  # -- The number of ApplicationSet controller pods to run
+  replicas: 2

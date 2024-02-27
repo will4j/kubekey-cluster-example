@@ -1,0 +1,43 @@
+# https://taskfile.dev/installation/
+# https://taskfile.dev/usage/
+# https://taskfile.dev/styleguide/
+version: '3'
+
+vars:
+  KK_COMMAND: ./bin/kk
+  CLUSTER_CONFIG: kubesphere-config.yaml
+
+env:
+  KKZONE: cn
+
+tasks:
+  os:init:
+    desc: init os with precondition
+    cmds:
+      - "{{.KK_COMMAND}} init os -f {{.CLUSTER_CONFIG}}"
+
+  cluster:create:
+    desc: create cluster by kubesphere config
+    cmds:
+      - "{{.KK_COMMAND}} create cluster -f {{.CLUSTER_CONFIG}}"
+
+  cluster:upgrade:
+    desc: upgrade cluster by kubesphere config
+    cmds:
+      - "{{.KK_COMMAND}} upgrade -f {{.CLUSTER_CONFIG}}"
+
+  cluster:delete:
+    desc: delete cluster by kubesphere config
+    prompt: This will delete the whole cluster, Do you want to continue?
+    cmds:
+      - "{{.KK_COMMAND}} delete cluster -f {{.CLUSTER_CONFIG}}"
+
+  cluster:show-supported-versions:
+    desc: show supported cluster versions
+    cmds:
+      - "{{.KK_COMMAND}} version --show-supported-k8s"
+
+  addons:apply:
+    desc: apply cluster addons by kubesphere config
+    cmds:
+      - "{{.KK_COMMAND}} alpha create phase addons -f {{.CLUSTER_CONFIG}}"

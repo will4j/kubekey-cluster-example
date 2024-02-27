@@ -1,0 +1,17 @@
+# https://github.com/kubernetes-csi/csi-driver-nfs/blob/master/charts/v4.6.0/csi-driver-nfs/values.yaml
+image:
+  nfs:
+    repository: m.daocloud.io/registry.k8s.io/sig-storage/nfsplugin
+  csiProvisioner:
+    repository: m.daocloud.io/registry.k8s.io/sig-storage/csi-provisioner
+  csiSnapshotter:
+    repository: m.daocloud.io/registry.k8s.io/sig-storage/csi-snapshotter
+  livenessProbe:
+    repository: m.daocloud.io/registry.k8s.io/sig-storage/livenessprobe
+  nodeDriverRegistrar:
+    repository: m.daocloud.io/registry.k8s.io/sig-storage/csi-node-driver-registrar
+  externalSnapshotter:
+    repository: m.daocloud.io/registry.k8s.io/sig-storage/snapshot-controller
+controller:
+  runOnControlPlane: true
+  defaultOnDeletePolicy: delete  # available values: delete, retain
