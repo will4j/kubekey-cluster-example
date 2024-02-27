@@ -5,7 +5,7 @@ version: '3'
 
 vars:
   KK_COMMAND: ./bin/kk
-  CLUSTER_CONFIG: kubesphere-config.yaml
+  CLUSTER_CONFIG: kubekey-config.yaml
 
 env:
   KKZONE: cn
@@ -17,17 +17,17 @@ tasks:
       - "{{.KK_COMMAND}} init os -f {{.CLUSTER_CONFIG}}"
 
   cluster:create:
-    desc: create cluster by kubesphere config
+    desc: create cluster by kubekey config
     cmds:
       - "{{.KK_COMMAND}} create cluster -f {{.CLUSTER_CONFIG}}"
 
   cluster:upgrade:
-    desc: upgrade cluster by kubesphere config
+    desc: upgrade cluster by kubekey config
     cmds:
       - "{{.KK_COMMAND}} upgrade -f {{.CLUSTER_CONFIG}}"
 
   cluster:delete:
-    desc: delete cluster by kubesphere config
+    desc: delete cluster by kubekey config
     prompt: This will delete the whole cluster, Do you want to continue?
     cmds:
       - "{{.KK_COMMAND}} delete cluster -f {{.CLUSTER_CONFIG}}"
@@ -38,6 +38,6 @@ tasks:
       - "{{.KK_COMMAND}} version --show-supported-k8s"
 
   addons:apply:
-    desc: apply cluster addons by kubesphere config
+    desc: apply cluster addons by kubekey config
     cmds:
       - "{{.KK_COMMAND}} alpha create phase addons -f {{.CLUSTER_CONFIG}}"
